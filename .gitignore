@@ -4,3 +4,4 @@ server/computers.json.tmp
 *.exe
 # Har o'rnatishga xos o'qituvchi kaliti (veyon-cli authkeys export teacher/public public.pem)
 public.pem
+.env
