@@ -11,15 +11,21 @@ shogird PC  --(1 buyruq)-->  server (Express + ngrok)  <--(1 buyruq)--  o'qituvc
 
 ## 1. Server (bir marta)
 
-Kerak: Node.js 20.12+, [ngrok](https://ngrok.com/download) (+ static domen), Veyon (o'qituvchi kaliti uchun).
+Kerak: Node.js 20.12+, [ngrok](https://ngrok.com/download) (+ static domen), Veyon (o'qituvchi kaliti uchun). Server Linux yoki Windows'da ishlaydi.
 
+Linux:
 ```
 ./server_setup.sh https://SIZNING-DOMEN.ngrok-free.app
 ./start.sh
 ```
+Windows (oddiy `cmd`, Administrator shart emas):
+```
+server_setup.bat https://SIZNING-DOMEN.ngrok-free.app
+start.bat
+```
 
-- `server_setup.sh` paketlarni o'rnatadi, `server/.env` ga **PUBLIC_URL** ni yozadi va `public.pem` ni tayyorlaydi.
-- `start.sh` serverni (port 3100) va ngrok tunnelini birga ishga tushiradi. `Ctrl+C` ikkalasini to'xtatadi.
+- `server_setup.*` paketlarni o'rnatadi, `server/.env` ga **PUBLIC_URL** ni yozadi va `public.pem` ni tayyorlaydi.
+- `start.sh` / `start.bat` serverni (port 3100) va ngrok tunnelini birga ishga tushiradi. `Ctrl+C` (Windows'da oynani yopish ham) ikkalasini to'xtatadi.
 - Sahifa: `PUBLIC_URL` manzilining o'zi. Unda tayyor buyruqlar va ro'yxatdagi kompyuterlar chiqadi.
 
 ### `server/.env`
@@ -67,4 +73,4 @@ Keyin Veyon Master'ni qayta oching, xonalar va kompyuterlar tayyor bo'ladi.
 - Server parolsiz: ngrok havolasini bilgan kishi ro'yxatni o'zgartira oladi.
 - `setup_teacher.*` Master'dagi barcha xona va kompyuterlarni o'chirib, ro'yxatni serverdan qayta quradi.
 - Veyon versiyasi hamma kompyuterlarda bir xil bo'lishi kerak (`VEYON_VER` skriptda).
-- `public.pem` repoga kirmaydi. Uni `veyon-cli authkeys export teacher/public public.pem` bilan chiqaring (`server_setup.sh` buni o'zi qiladi).
+- `public.pem` repoga kirmaydi. Uni `veyon-cli authkeys export teacher/public public.pem` bilan chiqaring (`server_setup.*` buni o'zi qiladi).
