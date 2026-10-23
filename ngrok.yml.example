@@ -1,6 +1,0 @@
-# ~/.config/ngrok/ngrok.yml ichiga qo'shing (domenni o'zingiznikiga almashtiring)
-endpoints:
-  - name: veyon
-    url: YOUR-STATIC-DOMAIN.ngrok-free.app
-    upstream:
-      url: 3100

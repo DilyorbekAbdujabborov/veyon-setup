@@ -13,7 +13,16 @@ const fs = require('fs');
 const net = require('net');
 const path = require('path');
 
+// .env (server/.env) bo'lsa o'qiladi; PUBLIC_URL - tashqaridan ko'rinadigan manzil (ngrok domeni)
+try { process.loadEnvFile(path.join(__dirname, '.env')); } catch {}
+
 const PORT = process.env.PORT || 3100;
+const PUBLIC_URL = (process.env.PUBLIC_URL || '').trim().replace(/\/+$/, '');
+if (!/^https?:\/\/[\w.-]+(:\d+)?$/.test(PUBLIC_URL)) {
+  if (PUBLIC_URL) console.warn(`[OGOHLANTIRISH] PUBLIC_URL noto'g'ri: ${PUBLIC_URL}`);
+  else console.warn('[OGOHLANTIRISH] PUBLIC_URL berilmagan (server/.env). Skriptlardagi SERVER qiymati o\'zgarmaydi.');
+}
+const PUBLIC_URL_OK = /^https?:\/\/[\w.-]+(:\d+)?$/.test(PUBLIC_URL);
 const DEFAULT_ROOM = process.env.DEFAULT_ROOM || 'Sinf-1';
 const DATA_FILE = path.join(__dirname, 'computers.json');
 const PUBLIC_KEY_FILE = process.env.PUBLIC_KEY_FILE || path.join(__dirname, '..', 'public.pem');
@@ -95,6 +104,11 @@ app.get('/public.pem', (req, res) => {
   res.type('application/x-pem-file').sendFile(path.resolve(PUBLIC_KEY_FILE));
 });
 
+// Bosh sahifa buyruqlarni to'g'ri domen bilan ko'rsatishi uchun
+app.get('/config.json', (req, res) => {
+  res.json({ publicUrl: PUBLIC_URL_OK ? PUBLIC_URL : null });
+});
+
 // Bosh sahifa (public/index.html)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -110,7 +124,13 @@ function sendScript(file) {
       return res.status(404).send('topilmadi');
     }
     const room = clean(req.query.room).replace(/[%^&|<>!]/g, '');
-    if (room) text = text.replace(/^set "ROOM=.*"\r?$/m, `set "ROOM=${room}"\r`);
+    if (room) text = text.replace(/^set "ROOM=.*"\r?$/m, () => `set "ROOM=${room}"\r`);
+    // Skriptdagi SERVER qiymati .env dagi PUBLIC_URL bilan almashtiriladi
+    if (PUBLIC_URL_OK) {
+      text = text
+        .replace(/^set "SERVER=.*"(\r?)$/m, (m, cr) => `set "SERVER=${PUBLIC_URL}"${cr}`)
+        .replace(/^SERVER=".*"/m, () => `SERVER="${PUBLIC_URL}"`);
+    }
     res.type('application/x-bat').attachment(file).send(text);
   };
 }
@@ -125,5 +145,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Veyon ro'yxat serveri ishga tushdi: http://0.0.0.0:${PORT}`);
+  console.log(`Veyon ro'yxat serveri ishga tushdi: http://0.0.0.0:${PORT}${PUBLIC_URL_OK ? ' -> ' + PUBLIC_URL : ''}`);
 });

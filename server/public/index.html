@@ -84,10 +84,11 @@
   </section>
 
   <section>
-    <h2>O'qituvchi kompyuter</h2>
+    <h2>O'qituvchi kompyuter (Windows va Linux)</h2>
     <p class="hint">Ro'yxatdagi kompyuterlarni xonalari bilan Veyon Master'ga avtomatik qo'shadi.</p>
     <div class="cmd"><pre id="teacher-cmd"></pre><button data-copy="teacher-cmd">Nusxa</button></div>
-    <div class="links"><a href="/t">setup_teacher.bat yuklab olish</a><a href="/public.pem">public.pem</a></div>
+    <div class="cmd"><pre id="teacher-linux-cmd"></pre><button data-copy="teacher-linux-cmd">Nusxa</button></div>
+    <div class="links"><a href="/t">setup_teacher.bat yuklab olish</a><a href="/t.sh">setup_teacher.sh</a><a href="/public.pem">public.pem</a></div>
   </section>
 
   <section>
@@ -100,7 +101,7 @@
 </main>
 
 <script>
-  const origin = location.origin;
+  let origin = location.origin;
   const roomInput = document.getElementById('room');
 
   function renderCommands() {
@@ -111,6 +112,8 @@
       `curl -sLo "%TEMP%\\v.bat" "${clientUrl}" && "%TEMP%\\v.bat"`;
     document.getElementById('teacher-cmd').textContent =
       `curl -sLo "%TEMP%\\t.bat" "${origin}/t" && "%TEMP%\\t.bat"`;
+    document.getElementById('teacher-linux-cmd').textContent =
+      `curl -sLo /tmp/t.sh ${origin}/t.sh && bash /tmp/t.sh`;
     document.getElementById('client-link').href = '/c' + q;
     try { localStorage.setItem('veyon-room', room); } catch {}
   }
@@ -118,6 +121,9 @@
   try { roomInput.value = localStorage.getItem('veyon-room') || roomInput.value; } catch {}
   roomInput.addEventListener('input', renderCommands);
   renderCommands();
+  fetch('/config.json').then((r) => r.json()).then((c) => {
+    if (c.publicUrl) { origin = c.publicUrl; renderCommands(); }
+  }).catch(() => {});
 
   document.querySelectorAll('button[data-copy]').forEach((btn) => {
     btn.addEventListener('click', async () => {
