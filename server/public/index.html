@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veyon o'rnatish</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1b1f24; --muted: #667085;
+    --border: #e3e6eb; --accent: #2563eb; --code-bg: #0f172a; --code-text: #e2e8f0;
+    --ok: #16a34a; --danger: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --card: #161b22; --text: #e6edf3; --muted: #8b949e;
+      --border: #30363d; --accent: #4c8dff; --code-bg: #010409; --code-text: #e2e8f0;
+      --ok: #3fb950; --danger: #f85149;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px; margin-bottom: 16px;
+  }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  p.hint { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input[type=text] {
+    width: 100%; padding: 8px 10px; border-radius: 6px; font: inherit;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  }
+  .cmd { position: relative; margin-top: 8px; }
+  pre {
+    margin: 0; padding: 12px 84px 12px 12px; border-radius: 8px; overflow-x: auto;
+    background: var(--code-bg); color: var(--code-text);
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  button {
+    font: inherit; cursor: pointer; border-radius: 6px; padding: 4px 10px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+  }
+  button:hover { border-color: var(--accent); }
+  .cmd button { position: absolute; top: 8px; right: 8px; font-size: 13px; }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .links a {
+    color: var(--accent); text-decoration: none; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+  td.mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .del { color: var(--danger); padding: 2px 8px; font-size: 13px; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .count { color: var(--muted); font-size: 13px; }
+  @media (max-width: 560px) { .hide-sm { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Veyon o'rnatish</h1>
+  <p class="sub">Buyruqni <b>Administrator</b> sifatida ochilgan cmd'ga qo'ying.</p>
+
+  <section>
+    <label for="room">Xona nomi (shogird kompyuterlar uchun)</label>
+    <input type="text" id="room" value="Sinf-1" autocomplete="off" spellcheck="false">
+  </section>
+
+  <section>
+    <h2>Shogird kompyuter</h2>
+    <p class="hint">Veyon Service o'rnatadi, kalitni oladi va kompyuterni ro'yxatga qo'shadi.</p>
+    <div class="cmd"><pre id="client-cmd"></pre><button data-copy="client-cmd">Nusxa</button></div>
+    <div class="links"><a id="client-link" href="/c">setup_client.bat yuklab olish</a></div>
+  </section>
+
+  <section>
+    <h2>O'qituvchi kompyuter</h2>
+    <p class="hint">Ro'yxatdagi kompyuterlarni xonalari bilan Veyon Master'ga avtomatik qo'shadi.</p>
+    <div class="cmd"><pre id="teacher-cmd"></pre><button data-copy="teacher-cmd">Nusxa</button></div>
+    <div class="links"><a href="/t">setup_teacher.bat yuklab olish</a><a href="/public.pem">public.pem</a></div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Ro'yxatdagi kompyuterlar</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div id="list"></div>
+  </section>
+</main>
+
+<script>
+  const origin = location.origin;
+  const roomInput = document.getElementById('room');
+
+  function renderCommands() {
+    const room = roomInput.value.trim();
+    const q = room ? '?room=' + encodeURIComponent(room) : '';
+    const clientUrl = origin + '/c' + q;
+    document.getElementById('client-cmd').textContent =
+      `curl -sLo "%TEMP%\\v.bat" "${clientUrl}" && "%TEMP%\\v.bat"`;
+    document.getElementById('teacher-cmd').textContent =
+      `curl -sLo "%TEMP%\\t.bat" "${origin}/t" && "%TEMP%\\t.bat"`;
+    document.getElementById('client-link').href = '/c' + q;
+    try { localStorage.setItem('veyon-room', room); } catch {}
+  }
+
+  try { roomInput.value = localStorage.getItem('veyon-room') || roomInput.value; } catch {}
+  roomInput.addEventListener('input', renderCommands);
+  renderCommands();
+
+  document.querySelectorAll('button[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const text = document.getElementById(btn.dataset.copy).textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'Nusxalandi';
+      } catch {
+        btn.textContent = 'Xato';
+      }
+      setTimeout(() => (btn.textContent = 'Nusxa'), 1500);
+    });
+  });
+
+  function cell(tr, text, cls) {
+    const td = document.createElement('td');
+    td.textContent = text;
+    if (cls) td.className = cls;
+    tr.appendChild(td);
+    return td;
+  }
+
+  async function loadList() {
+    const box = document.getElementById('list');
+    let data;
+    try {
+      data = await (await fetch('/computers')).json();
+    } catch {
+      box.textContent = 'Ro\'yxatni olib bo\'lmadi.';
+      return;
+    }
+    document.getElementById('count').textContent = data.length ? data.length + ' ta' : '';
+    box.replaceChildren();
+    if (!data.length) {
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = 'Hali birorta kompyuter ro\'yxatdan o\'tmagan.';
+      box.appendChild(d);
+      return;
+    }
+    const table = document.createElement('table');
+    const head = table.createTHead().insertRow();
+    ['Nomi', 'IP', 'Xona', 'MAC', ''].forEach((t, i) => {
+      const th = document.createElement('th');
+      th.textContent = t;
+      if (i === 3) th.className = 'hide-sm';
+      head.appendChild(th);
+    });
+    const body = table.createTBody();
+    data.sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
+    for (const c of data) {
+      const tr = body.insertRow();
+      cell(tr, c.name);
+      cell(tr, c.ip, 'mono');
+      cell(tr, c.room);
+      cell(tr, c.mac || '-', 'mono hide-sm');
+      const td = document.createElement('td');
+      const del = document.createElement('button');
+      del.className = 'del';
+      del.textContent = 'O\'chirish';
+      del.addEventListener('click', async () => {
+        if (!confirm(c.name + ' ro\'yxatdan o\'chirilsinmi?')) return;
+        await fetch('/computers/' + encodeURIComponent(c.name), { method: 'DELETE' });
+        loadList();
+      });
+      td.appendChild(del);
+      tr.appendChild(td);
+    }
+    box.appendChild(table);
+  }
+
+  loadList();
+  setInterval(loadList, 5000);
+</script>
+</body>
+</html>
